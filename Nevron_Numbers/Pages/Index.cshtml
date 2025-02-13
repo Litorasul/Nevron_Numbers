@@ -1,0 +1,147 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<style>
+    .button-container {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        margin-top: 20px;
+    }
+
+        .button-container button {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 20px;
+            background-color: lightgray;
+            color: black;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+            .button-container button:hover {
+                background-color: gray;
+            }
+
+    .number-container {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .number-item {
+        border: none;
+        border-radius: 10px;
+        padding: 10px;
+        background-color: lightgray;
+        color: black;
+    }
+
+    .number-item {
+        list-style-type: none;
+    }
+
+    .result-container {
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+
+        .result-container p {
+            margin: 2px 0;
+        }
+</style>
+
+<h1>Numbers Heather</h1>
+<h4>Numbers Subheader</h4>
+
+<div class="button-container">
+    <button type="button" id="clearNumbersButton">Clear Numbers</button>
+    <button type="button" id="addNumberButton">Add Number</button>
+    <button type="button" id="sumNumbersButton">Sum Numbers</button>
+</div>
+
+<form id="numberForm" method="post">
+    @Html.AntiForgeryToken()
+
+    <ul id="numbersList" class="number-container">
+        @foreach (var number in Model.Numbers)
+        {
+            <li class="number-item">@number</li>
+        }
+    </ul>
+    <div class="result-container">
+        <p id="countResult"><strong>Count:</strong> @Model.Count</p>
+        <p id="sumResult"><strong>Sum:</strong> @Model.Sum</p>
+    </div>
+
+</form>
+
+@section Scripts {
+    <script>
+        // Add number
+        document.getElementById("addNumberButton").addEventListener("click", function () {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            fetch('/?handler=AddNumber', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.number !== undefined && data.count !== undefined) {
+                    let listItem = document.createElement('li');
+                    listItem.textContent = data.number;
+                    listItem.classList.add('number-item');
+                    document.getElementById('numbersList').appendChild(listItem);
+                    document.getElementById('countResult').innerHTML = `<strong>Count:</strong> ${data.count}`;
+                } else {
+                    console.error('Invalid data:', data);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+        // Sum 
+        document.getElementById("sumNumbersButton").addEventListener("click", function () {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            fetch('/?handler=SumNumbers', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('sumResult').innerHTML = `<strong>Sum:</strong> ${data}`;
+            })
+            .catch(error => console.error('Error:', error));
+        });
+        // Clear 
+        document.getElementById("clearNumbersButton").addEventListener("click", function () {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+            fetch('/?handler=ClearNumbers', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('numbersList').innerHTML = '';
+                document.getElementById('sumResult').innerHTML = '<strong>Sum:</strong> 0';
+                document.getElementById('countResult').innerHTML = '<strong>Count:</strong> 0';
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+}
